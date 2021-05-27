@@ -1,171 +1,105 @@
 package com.example.rgrgit.controller;
 
-import com.example.rgrgit.model.Notification;
-import com.example.rgrgit.model.Post;
+import com.example.rgrgit.model.Message;
 import com.example.rgrgit.model.User;
-import com.example.rgrgit.service.FriendService;
-import com.example.rgrgit.service.NotificationService;
-import com.example.rgrgit.service.PostService;
+import com.example.rgrgit.service.MessageService;
 import com.example.rgrgit.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.List;
 
 @Controller
-public class MainController {
-    @Autowired
-    private PostService postService;
+public class MessageController {
     @Autowired
     private UserService userService;
     @Autowired
-    private NotificationService notificationService;
-    @Autowired
-    private FriendService friendService;
+    private MessageService messageService;
 
-    @RequestMapping(value = "/register")
-    public String registerUser(Model model) {
-        model.addAttribute("user", new User());
-        return "registerform";
-    }
+    @RequestMapping(value = "/user/{id}/newmessage")
+    public String sendMessageToUser(@PathVariable Integer id, Model model) {
+        User currentUser = userService.getCurrentLoggedUser();
+        String newMessageUsername = userService.getUserById(id).getUsername();
+        String currentUsername = currentUser.getUsername();
+        List<Message> conversationWithUserByUsername = messageService.getAllMessages(newMessageUsername);
+        List<String> myConversations = messageService.getConversations();
+        Integer myNumberOfFriendsInvitations = currentUser.getInvitations();
+        Integer myNumberOfNewMessages = currentUser.getNewmessage();
+        Integer myNumberOfNotifications = currentUser.getNotification();
+        List<Message> myMessages = currentUser.getMymessages();
+        boolean isNull = true;
 
-    @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public String saveUser(@Valid User user, BindingResult bindingResult) {
-        List<String> allUsernames = userService.getAllUsersUsernames();
-        String username = user.getUsername();
-        String password = user.getPassword();
-        String repeatedPassword = user.getRepeatedPassword();
-
-        if (bindingResult.hasErrors() || allUsernames.contains(username) || !password.equals(repeatedPassword)) {
-            bindingResult.getAllErrors().forEach(error -> {
-                System.out.println(error.getObjectName() + " " + error.getDefaultMessage());
-            });
-            return "registerform"; }
+        if(newMessageUsername.equals(currentUsername)) {
+            return "redirect:/myprofile";}
         else {
-            userService.saveUser(user);
-            return "redirect:/login"; }
+            model.addAttribute("empty", isNull);
+            model.addAttribute("conversation", conversationWithUserByUsername);
+            model.addAttribute("user", newMessageUsername);
+            model.addAttribute("current", currentUsername);
+            model.addAttribute("message", new Message());
+            model.addAttribute("messages", myConversations);
+            model.addAttribute("username", currentUsername);
+            model.addAttribute("invitations", myNumberOfFriendsInvitations);
+            model.addAttribute("newmessage", myNumberOfNewMessages);
+            model.addAttribute("notifications", myNumberOfNotifications);
+            return "newmessage";}
     }
 
-    @RequestMapping(value = "/login")
-    public String login() {
-        return "login";
-    }
-
-    @RequestMapping(value = "/")
-    public String homeIdle(Model model) {
-        User currentUser = userService.getCurrentLoggedUser();
-        List<Post> myAllPosts = postService.getMyAllPosts();
-        Integer currentUserId = currentUser.getId();
-        String currentUsername = currentUser.getUsername();
-        List<String> requestFriendsUsersnames = friendService.getAllFriendsRequests();
-        Integer myNumberOfFriendsInvitations = currentUser.getInvitations();
-        Integer myNumberOfNewMessages = currentUser.getNewmessage();
-        Integer myNumberOfNotifications = currentUser.getNotification();
-        model.addAttribute("invitations", myNumberOfFriendsInvitations);
-        model.addAttribute("newmessage", myNumberOfNewMessages);
-        model.addAttribute("id", currentUserId);
-        model.addAttribute("posts", myAllPosts);
-        model.addAttribute("post", new Post());
-        model.addAttribute("username", currentUsername);
-        model.addAttribute("users", requestFriendsUsersnames);
-        model.addAttribute("notifications", myNumberOfNotifications);
-        return "index";
-    }
-
-    @RequestMapping(value = "/home")
-    public String home(Model model) {
-        User currentUser = userService.getCurrentLoggedUser();
-        List<Post> myAllPosts = postService.getMyAllPosts();
-        Integer currentUserId = currentUser.getId();
-        String currentUsername = currentUser.getUsername();
-        List<String> requestFriendsUsersnames = friendService.getAllFriendsRequests();
-        Integer myNumberOfFriendsInvitations = currentUser.getInvitations();
-        Integer myNumberOfNewMessages = currentUser.getNewmessage();
-        Integer myNumberOfNotifications = currentUser.getNotification();
-        model.addAttribute("invitations", myNumberOfFriendsInvitations);
-        model.addAttribute("newmessage", myNumberOfNewMessages);
-        model.addAttribute("id", currentUserId);
-        model.addAttribute("posts", myAllPosts);
-        model.addAttribute("post", new Post());
-        model.addAttribute("username", currentUsername);
-        model.addAttribute("users", requestFriendsUsersnames);
-        model.addAttribute("notifications", myNumberOfNotifications);
-        return "index";
-    }
-
-    @RequestMapping(value = "/home", method = RequestMethod.POST)
-    public String addMessage(@Valid Post post, BindingResult bindingResult) {
+    @RequestMapping(value = "/newmessage", method = RequestMethod.POST)
+    public String saveMessageToUse(@Valid Message message, BindingResult bindingResult) {
+        String receiverName = message.getReceiver();
+        Integer receiverId = userService.getUserByName(receiverName).getId();
 
         if(bindingResult.hasErrors()) {
             bindingResult.getAllErrors().forEach(error ->{
                 System.out.println(error.getObjectName() + " " + error.getDefaultMessage());
             });
-            return "redirect:/home";}
+            return "redirect:/user/" + receiverId + "/newmessage";}
         else {
-            postService.savePost(post);
-            return "redirect:/home";}
+            messageService.saveMessage(message);
+            return "redirect:/user/" + receiverId + "/newmessage";}
     }
 
-    @RequestMapping(value = "/search", method = RequestMethod.GET)
-    public String search(Model model, @RequestParam(value = "search") String username) {
-        String currentUsername = userService.getCurrentLoggedUser().getUsername();
+    @RequestMapping(value = "/mymessages")
+    public String getMyMessages(Model model) {
         User currentUser = userService.getCurrentLoggedUser();
-        Integer myNumberOfFriendsInvitations = currentUser.getInvitations();
-        Integer myNumberOfNewMessages = currentUser.getNewmessage();
-        Integer myNumberOfNotifications = currentUser.getNotification();
-        List<User> searchedUsers = userService.searchUsersByName(username.trim());
-
-        model.addAttribute("name", username);
-        model.addAttribute("user", searchedUsers);
-        model.addAttribute("username", currentUsername);
-        model.addAttribute("invitations", myNumberOfFriendsInvitations);
-        model.addAttribute("newmessage", myNumberOfNewMessages);
-        model.addAttribute("notifications", myNumberOfNotifications);
-        return "searchresult";
-    }
-
-    @RequestMapping(value = "/invitations")
-    public String getInvitations(Model model) {
-        User currentUser = userService.getCurrentLoggedUser();
-        String currentUserUsername = currentUser.getUsername();
-        List<String> myFriendsRequests = friendService.getAllFriendsRequests();
-        Integer myNumberOfFriendsInvitations = currentUser.getInvitations();
-        Integer myNumberOfNewMessages = currentUser.getNewmessage();
-        Integer myNumberOfNotifications = currentUser.getNotification();
-
-        model.addAttribute("size", myFriendsRequests.size());
-        model.addAttribute("users", myFriendsRequests);
-        model.addAttribute("username", currentUserUsername);
-        model.addAttribute("invitations", myNumberOfFriendsInvitations);
-        model.addAttribute("newmessage", myNumberOfNewMessages);
-        model.addAttribute("notifications", myNumberOfNotifications);
-        return "invitations";
-    }
-
-    @RequestMapping(value = "/notifications")
-    public String getNotifications(Model model) {
-        User currentUser = userService.getCurrentLoggedUser();
-        String currentUserUsername = currentUser.getUsername();
-        currentUser.setNotification(0);
+        String currentUsername = currentUser.getUsername();
+        currentUser.setNewmessage(0);
         userService.updateUser(currentUser);
+        List<Message> myMessages = currentUser.getMymessages();
         Integer myNumberOfFriendsInvitations = currentUser.getInvitations();
-        Integer myNumberOfNewMessages = currentUser.getNewmessage();
         Integer myNumberOfNotifications = currentUser.getNotification();
-        List<Notification> myNotifications = notificationService.getMyNotifications();
+        boolean isNull = myMessages.size()>0;
 
-        model.addAttribute("size", notificationService.getMyNotifications().size());
-        model.addAttribute("username", currentUserUsername);
-        model.addAttribute("invitations", myNumberOfFriendsInvitations);
-        model.addAttribute("newmessage", myNumberOfNewMessages);
-        model.addAttribute("notification", myNumberOfNotifications);
-        model.addAttribute("notifications", myNotifications);
-        return "notifications";
+        if (myMessages.size()>0){
+            Message lastMessage = myMessages.get(myMessages.size()-1);
+            String receiverNameFromLastMessage = lastMessage.getReceiver();
+
+            if (receiverNameFromLastMessage.equals(currentUsername)) {
+                Integer lastAuthorId = userService.getUserByName(lastMessage.getAuthor()).getId();
+                return "redirect:/user/" + lastAuthorId + "/newmessage"; }
+            else {
+                Integer lastReceiverId = userService.getUserByName(receiverNameFromLastMessage).getId();
+                return "redirect:/user/" + lastReceiverId + "/newmessage";}}
+
+        else {
+            model.addAttribute("empty", isNull);
+            model.addAttribute("invitations", myNumberOfFriendsInvitations);
+            model.addAttribute("username", currentUsername);
+            model.addAttribute("notifications", myNumberOfNotifications);
+            return "newmessage";}
     }
 
+    @RequestMapping(value = "/conversation/{user}")
+    public String getConversation(@PathVariable String user) {
+        Integer conversationUserId = userService.getUserByName(user).getId();
+        return "redirect:/user/" + conversationUserId + "/newmessage";
+    }
 }
+
