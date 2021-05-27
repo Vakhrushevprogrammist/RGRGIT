@@ -1,4 +1,4 @@
-package config;
+package com.example.rgrgit.config;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
