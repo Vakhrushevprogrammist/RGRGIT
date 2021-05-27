@@ -1,4 +1,4 @@
-package com.example.Daily.model;
+package com.example.rgrgit.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
