@@ -9,5 +9,4 @@ public class RgrgitApplication {
     public static void main(String[] args) {
         SpringApplication.run(RgrgitApplication.class, args);
     }
-
 }
