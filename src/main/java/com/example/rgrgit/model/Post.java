@@ -17,6 +17,7 @@ public class Post {
     @Column(name = "content")
     @NotBlank
     private String content;
+    private String photo;
     @Column(name = "date")
     private String date;
     private Integer liked = 0;
@@ -27,6 +28,14 @@ public class Post {
 
     public Post() {
 
+    }
+
+    public String getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
     }
 
     public Integer getId() {

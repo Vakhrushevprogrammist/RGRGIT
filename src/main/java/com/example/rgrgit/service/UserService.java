@@ -30,6 +30,8 @@ public class UserService {
     private SessionRegistry sessionRegistry;
     @Autowired
     private MessageRepository messageRepository;
+    @Autowired
+    private MailService mailService;
 
     public List<User> getAllUsers()
     {
@@ -69,9 +71,24 @@ public class UserService {
         return userRepository.getUserByName(username);
     }
 
+    public boolean activateUser(String activationCode) {
+        System.out.println("yo");
+        Optional<User> u = userRepository.findByActivationCode(activationCode);
+        if(u.isPresent()) {
+            User user = u.get();
+            user.setEnabled(true);
+            user.setActivationCode(null);
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
     @Transactional
     public void saveUser(User user) {
         Role role = new Role(user.getUsername(),"USER");
+        user.setActivationCode(UUID.randomUUID().toString());
+        mailService.sendGreetingMessage(user);
         roleRepository.save(role);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);

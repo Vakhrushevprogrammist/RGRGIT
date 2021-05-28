@@ -21,7 +21,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(HttpSecurity security) throws Exception {
         security.authorizeRequests().antMatchers("/register").permitAll()
-                .antMatchers("/webjars/**").permitAll()
+                .antMatchers("/webjars/**","/activate/**","/resources/**","/img/**","/images/**","/uploads/**").permitAll()
                 .antMatchers("/home").hasAnyAuthority("ADMIN", "USER")
                 .antMatchers("/admin/**").hasAnyAuthority("ADMIN")
                 .anyRequest().authenticated().and().formLogin().defaultSuccessUrl("/home")

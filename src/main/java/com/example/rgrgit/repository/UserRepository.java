@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
@@ -20,4 +21,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     @Query(value = "SELECT u FROM User u where UPPER(u.username) = UPPER(?1)")
     List<User> findByUsernameIgnoreCase(String username);
+
+    Optional<User> findByActivationCode(String activationCode);
 }

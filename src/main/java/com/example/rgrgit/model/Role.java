@@ -1,10 +1,12 @@
 package com.example.rgrgit.model;
 
+import org.springframework.security.core.GrantedAuthority;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "role")
-public class Role {
+public class Role implements GrantedAuthority {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
@@ -21,6 +23,8 @@ public class Role {
         this.username = username;
         this.role = role;
     }
+
+
 
     public Integer getId() {
         return id;
@@ -45,5 +49,9 @@ public class Role {
     public void setRole(String role) {
         this.role = role;
     }
-}
 
+    @Override
+    public String getAuthority() {
+        return getRole();
+    }
+}

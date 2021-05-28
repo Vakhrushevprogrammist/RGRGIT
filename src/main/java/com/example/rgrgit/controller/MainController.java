@@ -3,6 +3,7 @@ package com.example.rgrgit.controller;
 import com.example.rgrgit.model.Notification;
 import com.example.rgrgit.model.Post;
 import com.example.rgrgit.model.User;
+import com.example.rgrgit.repository.FileUploadService;
 import com.example.rgrgit.service.FriendService;
 import com.example.rgrgit.service.NotificationService;
 import com.example.rgrgit.service.PostService;
@@ -11,10 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.*;
 
@@ -28,6 +33,8 @@ public class MainController {
     private NotificationService notificationService;
     @Autowired
     private FriendService friendService;
+    @Autowired
+    private FileUploadService fileUploadService;
 
     @RequestMapping(value = "/register")
     public String registerUser(Model model) {
@@ -36,7 +43,7 @@ public class MainController {
     }
 
     @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public String saveUser(@Valid User user, BindingResult bindingResult) {
+    public String saveUser(@Valid User user, BindingResult bindingResult, Model model) {
         List<String> allUsernames = userService.getAllUsersUsernames();
         String username = user.getUsername();
         String password = user.getPassword();
@@ -49,8 +56,21 @@ public class MainController {
             return "registerform"; }
         else {
             userService.saveUser(user);
-            return "redirect:/login"; }
+            model.addAttribute("msg", "Успешная регистрация! Пройдите процедуру активации аккаунта через email");
+            return "login"; }
     }
+
+    @RequestMapping("/activate/{activationCode}")
+    public String activateUser(Model model, @PathVariable String activationCode) {
+        if(userService.activateUser(activationCode)) {
+            model.addAttribute("msg", "Пользователь активирован");
+            return "redirect:/";
+        } else {
+            model.addAttribute("msg", "Код активации не найден");
+            return "redirect:/";
+        }
+    }
+
 
     @RequestMapping(value = "/login")
     public String login() {
@@ -100,7 +120,7 @@ public class MainController {
     }
 
     @RequestMapping(value = "/home", method = RequestMethod.POST)
-    public String addMessage(@Valid Post post, BindingResult bindingResult) {
+    public String addMessage(@Valid Post post, @RequestParam("imageFile") MultipartFile imageFile, BindingResult bindingResult) {
 
         if(bindingResult.hasErrors()) {
             bindingResult.getAllErrors().forEach(error ->{
@@ -108,6 +128,14 @@ public class MainController {
             });
             return "redirect:/home";}
         else {
+            if (!imageFile.isEmpty()) {
+                try {
+                    String imagePath = fileUploadService.saveImage(imageFile);
+                    post.setPhoto(imagePath);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             postService.savePost(post);
             return "redirect:/home";}
     }
@@ -169,4 +197,3 @@ public class MainController {
     }
 
 }
-
