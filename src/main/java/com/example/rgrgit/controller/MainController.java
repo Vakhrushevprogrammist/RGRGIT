@@ -120,7 +120,7 @@ public class MainController {
     }
 
     @RequestMapping(value = "/home", method = RequestMethod.POST)
-    public String addMessage(@Valid Post post, @RequestParam("imageFile") MultipartFile imageFile, BindingResult bindingResult) {
+    public String addPost(@Valid Post post, @RequestParam("imageFile") MultipartFile imageFile, BindingResult bindingResult) {
 
         if(bindingResult.hasErrors()) {
             bindingResult.getAllErrors().forEach(error ->{
