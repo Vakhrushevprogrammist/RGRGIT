@@ -204,7 +204,7 @@ img{ max-width:100%;}
                 <div class="inbox_chat">
                     <div th:if="${empty}" th:class="${message.equals(user) ? 'chat_list active_chat' : 'chat_list'}" th:each="message : ${messages}">
                         <div class="chat_people">
-                            <div class="chat_img"> <img src="/images/man.png" alt="sunil"> </div>
+                            <div class="chat_img"> <img src="/img/man.png" alt="sunil"> </div>
                             <div class="chat_ib">
                                 <a th:href="${'/conversation/'+ message}"><h5 th:text="${message}"><span class="chat_date">Dec 25</span></h5></a>
                                 <p>Сообщения</p>
@@ -219,7 +219,7 @@ img{ max-width:100%;}
                 <div class="msg_history">
                     <div th:if="${empty}" th:each="message : ${conversation}">
                         <div class="incoming_msg" th:if="${message.author.equals(user)}">
-                            <div class="incoming_msg_img"> <img src="/images/man.png" alt="sunil"> </div>
+                            <div class="incoming_msg_img"> <img src="/img/man.png" alt="sunil"> </div>
                             <div class="received_msg">
                                 <div class="received_withd_msg">
                                     <p th:text="${message.content}"></p>
